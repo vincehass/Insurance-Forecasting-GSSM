@@ -22,20 +22,20 @@ policy_id,date,claims_amount,claims_count,risk_level,age,premium,location_risk,m
 
 ### Column Descriptions
 
-| Column | Type | Description | Example |
-|--------|------|-------------|---------|
-| **policy_id** | int | Unique policy identifier | 0, 1, 2, ... |
-| **date** | datetime | Month of observation | 2015-01-01 |
-| **claims_amount** | float | Total claims amount ($) | 327.45 |
-| **claims_count** | int | Number of claims | 0, 1, 2 |
-| **risk_level** | int | Risk category (0=Low, 1=Medium, 2=High) | 0, 1, 2 |
-| **age** | int | Customer age | 25-75 |
-| **premium** | float | Monthly premium ($) | 500-2000 |
-| **location_risk** | float | Location risk factor | 0.5-1.5 |
-| **month** | int | Month of year (0-11) | 0-11 |
-| **quarter** | int | Quarter (0-3) | 0-3 |
-| **unemployment_rate** | float | Local unemployment (%) | 4.5-5.5 |
-| **gdp_growth** | float | GDP growth rate (%) | 2.2-2.8 |
+| Column                | Type     | Description                             | Example      |
+| --------------------- | -------- | --------------------------------------- | ------------ |
+| **policy_id**         | int      | Unique policy identifier                | 0, 1, 2, ... |
+| **date**              | datetime | Month of observation                    | 2015-01-01   |
+| **claims_amount**     | float    | Total claims amount ($)                 | 327.45       |
+| **claims_count**      | int      | Number of claims                        | 0, 1, 2      |
+| **risk_level**        | int      | Risk category (0=Low, 1=Medium, 2=High) | 0, 1, 2      |
+| **age**               | int      | Customer age                            | 25-75        |
+| **premium**           | float    | Monthly premium ($)                     | 500-2000     |
+| **location_risk**     | float    | Location risk factor                    | 0.5-1.5      |
+| **month**             | int      | Month of year (0-11)                    | 0-11         |
+| **quarter**           | int      | Quarter (0-3)                           | 0-3          |
+| **unemployment_rate** | float    | Local unemployment (%)                  | 4.5-5.5      |
+| **gdp_growth**        | float    | GDP growth rate (%)                     | 2.2-2.8      |
 
 ---
 
@@ -117,6 +117,7 @@ risk: torch.LongTensor [batch_size, 1]  # 0, 1, or 2
 ## 📊 Data Statistics (Synthetic Dataset)
 
 ### Dataset Size
+
 ```
 Number of Policies: 1,000
 Months per Policy: 100
@@ -125,6 +126,7 @@ Time Range: Jan 2015 - Apr 2023 (100 months)
 ```
 
 ### Claims Amount Distribution
+
 ```
 Mean:    $567.34
 Median:  $489.23
@@ -137,6 +139,7 @@ P95:     $1,456.78
 ```
 
 ### Claims Frequency Distribution
+
 ```
 0 claims: 82.3% of months
 1 claim:  15.4% of months
@@ -147,6 +150,7 @@ Average claims per month: 0.21
 ```
 
 ### Risk Level Distribution
+
 ```
 Low Risk (0):    45.2% of records
 Medium Risk (1): 38.7% of records
@@ -219,58 +223,60 @@ Normalized: (567.34 - 500.00) / 200.00 = 0.337
 ## 📝 Example: Complete Data Sample
 
 ### Input Sample
+
 ```python
 {
     'history': torch.Tensor([
         # Month 1 (60 months ago)
         [0.34, -0.56, 0.12, ..., 0.89],  # 50 features
-        
+
         # Month 2 (59 months ago)
         [0.21, -0.48, 0.34, ..., 0.76],
-        
+
         # ...
-        
+
         # Month 60 (current)
         [0.45, -0.32, 0.67, ..., 0.94]
     ]),  # Shape: [60, 50]
-    
+
     'targets': {
         '3m':  torch.Tensor([0.234]),   # Normalized claims 3 months ahead
         '6m':  torch.Tensor([0.456]),   # 6 months ahead
         '12m': torch.Tensor([0.678]),   # 12 months ahead
         '24m': torch.Tensor([0.789])    # 24 months ahead
     },
-    
+
     'frequencies': {
         '3m':  torch.LongTensor([1]),   # Expected 1 claim
         '6m':  torch.LongTensor([0]),   # Expected 0 claims
         '12m': torch.LongTensor([2]),   # Expected 2 claims
         '24m': torch.LongTensor([1])    # Expected 1 claim
     },
-    
+
     'risk': torch.LongTensor([1])  # Medium risk
 }
 ```
 
 ### Model Output
+
 ```python
 {
     'claims_amount_3m':  0.245,  # Predicted $589.23
     'claims_amount_6m':  0.467,  # Predicted $612.45
     'claims_amount_12m': 0.689,  # Predicted $734.56
     'claims_amount_24m': 0.801,  # Predicted $856.78
-    
+
     'claims_count_3m':  1.23,  # Expected ~1 claim
     'claims_count_6m':  0.87,  # Expected ~1 claim
     'claims_count_12m': 2.14,  # Expected ~2 claims
     'claims_count_24m': 1.56,  # Expected ~2 claims
-    
+
     'risk_probs': [0.12, 0.76, 0.12],  # [Low, Medium, High]
     'risk_prediction': 1,  # Medium risk
-    
+
     'pricing_probs': [0.05, 0.08, 0.45, 0.25, 0.12, 0.03, 0.02, 0.00],
     'pricing_action': 2,  # Maintain premium
-    
+
     'loss_ratio': 0.68  # Predicted 68% loss ratio
 }
 ```
@@ -280,6 +286,7 @@ Normalized: (567.34 - 500.00) / 200.00 = 0.337
 ## 🔍 Feature Details (50 Features)
 
 ### Core Features (12)
+
 1. **claims_amount** - Historical claims ($)
 2. **claims_count** - Number of claims
 3. **age** - Customer age
@@ -290,16 +297,19 @@ Normalized: (567.34 - 500.00) / 200.00 = 0.337
 8. **unemployment_rate** - Local unemployment
 9. **gdp_growth** - Economic growth
 10. **risk_level** - Historical risk category
-11. **month_sin** - Cyclic encoding sin(2π*month/12)
-12. **month_cos** - Cyclic encoding cos(2π*month/12)
+11. **month_sin** - Cyclic encoding sin(2π\*month/12)
+12. **month_cos** - Cyclic encoding cos(2π\*month/12)
 
 ### Lag Features (24)
+
 For claims_amount and claims_count:
+
 - lag_1, lag_3, lag_6, lag_12 (last 1, 3, 6, 12 months)
 - rolling_mean_3, rolling_mean_6, rolling_mean_12
 - rolling_std_3, rolling_std_6, rolling_std_12
 
 ### Temporal Features (8)
+
 - **quarter_sin** - Cyclic quarter encoding
 - **quarter_cos** - Cyclic quarter encoding
 - **day_of_week** - Day of week (if daily data)
@@ -310,6 +320,7 @@ For claims_amount and claims_count:
 - **season** - Season indicator
 
 ### Derived Features (6)
+
 - **claims_per_premium** - Claims/Premium ratio
 - **risk_score** - Computed risk score
 - **trend** - Linear trend component
@@ -353,6 +364,7 @@ print(f"Risk shape: {batch['risk'].shape}")                # [32, 1]
 ## 📊 Visualization Examples
 
 ### Temporal Pattern
+
 ```
 Claims Amount Over Time (Policy ID: 123)
 $2000 ┤                            ╭╮
@@ -365,11 +377,12 @@ $1000 ┤         ╭╯╰╮      ╭╯         ╰╮
       │   ╭╯         ╰╯
     0 ┼───┴─────────────────────────────→
       Jan  Apr  Jul  Oct  Jan  Apr  Jul  Oct
-      
+
 Clear seasonal pattern with annual cycle
 ```
 
 ### Risk Distribution
+
 ```
 Risk Level Distribution
 Low (0)    ████████████████████████████████████ 45.2%
