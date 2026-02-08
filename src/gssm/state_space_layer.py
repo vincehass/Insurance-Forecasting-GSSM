@@ -79,15 +79,20 @@ class StateSpaceLayer(nn.Module):
         """Initialize SSM parameters following S4 initialization."""
         # Initialize A matrix (diagonal dominance for stability)
         with torch.no_grad():
-            A = -torch.exp(self.A_log)
-            self.A_log.data = torch.log(-A)
+            # Initialize A_log to give A values in stable range [-1, -0.1]
+            self.A_log.data.uniform_(-2.0, -0.1)
             
             # Initialize B and C for proper scaling
             nn.init.xavier_uniform_(self.B)
+            self.B.data *= 0.1  # Scale down for stability
             nn.init.xavier_uniform_(self.C)
+            self.C.data *= 0.1  # Scale down for stability
             
             # Initialize D for skip connection
             nn.init.zeros_(self.D)
+            
+            # Initialize delta to small positive values
+            self.delta.data.uniform_(0.001, 0.1)
     
     def _discretize_ssm(self, delta: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -112,7 +117,9 @@ class StateSpaceLayer(nn.Module):
         
         # Compute B_bar efficiently
         # For diagonal A: B_bar = (exp(delta * A) - 1) / A * B
-        B_bar = ((A_bar - 1) / A.unsqueeze(0)).unsqueeze(-1) * self.B.unsqueeze(0)
+        # Add epsilon to prevent division by zero
+        A_safe = A.unsqueeze(0) + 1e-8 * torch.sign(A.unsqueeze(0))
+        B_bar = ((A_bar - 1) / A_safe).unsqueeze(-1) * self.B.unsqueeze(0)
         
         return A_bar, B_bar
     
@@ -249,7 +256,9 @@ class StateSpaceLayer(nn.Module):
             state = torch.zeros(batch_size, self.d_state, device=u.device, dtype=u.dtype)
         
         # Update state using last input
-        A_bar, B_bar = self._discretize_ssm(self.delta)
+        # Use mean delta for state update (delta is per d_model dimension)
+        delta_mean = self.delta.mean()
+        A_bar, B_bar = self._discretize_ssm(delta_mean.unsqueeze(0).expand(batch_size))
         final_state = A_bar * state + (B_bar * u[:, -1:, :]).sum(dim=-1)
         
         return y, final_state

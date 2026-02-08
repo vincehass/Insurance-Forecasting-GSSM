@@ -479,6 +479,37 @@ class InsuranceAutocorrelationModule(nn.Module):
         # Seasonal lag importance
         self.seasonal_importance = nn.Parameter(torch.ones(len(seasonal_lags)))
     
+    def _stable_correlation(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        """
+        Compute correlation coefficient with numerical stability.
+        
+        Args:
+            x, y: Input tensors of same length
+            
+        Returns:
+            Correlation coefficient (clamped to [-1, 1])
+        """
+        # Center the data
+        x_mean = x.mean()
+        y_mean = y.mean()
+        x_centered = x - x_mean
+        y_centered = y - y_mean
+        
+        # Compute correlation with numerical stability
+        numerator = (x_centered * y_centered).sum()
+        x_std = torch.sqrt((x_centered ** 2).sum() + 1e-8)
+        y_std = torch.sqrt((y_centered ** 2).sum() + 1e-8)
+        denominator = x_std * y_std + 1e-8
+        
+        corr = numerator / denominator
+        
+        # Clamp to valid correlation range and replace NaN with 0
+        corr = torch.clamp(corr, -1.0, 1.0)
+        if torch.isnan(corr) or torch.isinf(corr):
+            corr = torch.tensor(0.0, device=x.device, dtype=x.dtype)
+        
+        return corr
+    
     def forward(
         self,
         input_sequence: torch.Tensor,
@@ -504,21 +535,39 @@ class InsuranceAutocorrelationModule(nn.Module):
         for b in range(batch_size):
             seq = claims_sequence[b]
             
-            # Compute autocorrelation function
-            seq_normalized = (seq - seq.mean()) / (seq.std() + 1e-8)
+            # Normalize sequence
+            seq_mean = seq.mean()
+            seq_std = seq.std()
+            if seq_std < 1e-6:  # Handle constant sequences
+                rewards.append(torch.tensor(0.0, device=seq.device, dtype=seq.dtype))
+                continue
+            
+            seq_normalized = (seq - seq_mean) / (seq_std + 1e-8)
             
             autocorr = []
             for lag in range(1, min(self.max_lag + 1, seq_length)):
                 if lag < seq_length:
-                    corr = torch.corrcoef(torch.stack([
+                    # Use stable correlation function
+                    corr = self._stable_correlation(
                         seq_normalized[:-lag],
                         seq_normalized[lag:]
-                    ]))[0, 1]
+                    )
                     autocorr.append(corr)
                 else:
-                    autocorr.append(torch.tensor(0.0, device=seq.device))
+                    autocorr.append(torch.tensor(0.0, device=seq.device, dtype=seq.dtype))
+            
+            if not autocorr:
+                rewards.append(torch.tensor(0.0, device=seq.device, dtype=seq.dtype))
+                continue
             
             autocorr = torch.stack(autocorr)
+            
+            # Replace any remaining NaN/Inf with 0
+            autocorr = torch.where(
+                torch.isnan(autocorr) | torch.isinf(autocorr),
+                torch.zeros_like(autocorr),
+                autocorr
+            )
             
             # Apply learnable lag weights
             lag_weights_normalized = F.softmax(self.lag_weights[:len(autocorr)], dim=0)
@@ -530,10 +579,19 @@ class InsuranceAutocorrelationModule(nn.Module):
                 if lag <= len(autocorr):
                     seasonal_reward += autocorr[lag - 1] * self.seasonal_importance[i]
             
-            total_reward = weighted_autocorr + seasonal_reward
+            total_reward = weighted_autocorr + 0.1 * seasonal_reward  # Scale down seasonal
             rewards.append(total_reward)
         
-        return torch.stack(rewards).mean()
+        if not rewards:
+            return torch.tensor(0.0, device=input_sequence.device, dtype=input_sequence.dtype)
+        
+        reward_tensor = torch.stack(rewards)
+        # Final safety check
+        reward_mean = reward_tensor.mean()
+        if torch.isnan(reward_mean) or torch.isinf(reward_mean):
+            return torch.tensor(0.0, device=input_sequence.device, dtype=input_sequence.dtype)
+        
+        return reward_mean
 
 
 class InsuranceCycleDetector(nn.Module):
@@ -584,9 +642,22 @@ class InsuranceCycleDetector(nn.Module):
         # Extract claims sequence
         claims_sequence = input_sequence[:, :, 0]  # [batch, length]
         
-        # FFT analysis
-        fft_claims = fft(claims_sequence, dim=1)
-        freqs = fftfreq(seq_length, self.sampling_rate)
+        # Normalize to prevent FFT overflow
+        claims_mean = claims_sequence.mean(dim=1, keepdim=True)
+        claims_std = claims_sequence.std(dim=1, keepdim=True) + 1e-8
+        claims_normalized = (claims_sequence - claims_mean) / claims_std
+        
+        # FFT analysis with numerical stability
+        try:
+            fft_claims = fft(claims_normalized, dim=1)
+            # Clamp FFT output to prevent overflow
+            fft_claims.real = torch.clamp(fft_claims.real, -1e6, 1e6)
+            fft_claims.imag = torch.clamp(fft_claims.imag, -1e6, 1e6)
+        except:
+            # Fallback to zeros if FFT fails
+            return torch.zeros(batch_size, self.d_model, device=input_sequence.device, dtype=input_sequence.dtype)
+        
+        freqs = fftfreq(seq_length, self.sampling_rate).to(input_sequence.device)
         
         # Extract energy at relevant frequencies
         cycle_features = []
@@ -594,9 +665,26 @@ class InsuranceCycleDetector(nn.Module):
             # Find closest frequency bin
             freq_idx = torch.argmin(torch.abs(freqs - cycle_freq))
             
-            # Extract magnitude and phase
-            magnitude = torch.abs(fft_claims[:, freq_idx])
-            phase = torch.angle(fft_claims[:, freq_idx])
+            # Extract magnitude and phase with stability
+            fft_val = fft_claims[:, freq_idx]
+            magnitude = torch.abs(fft_val)
+            phase = torch.angle(fft_val)
+            
+            # Clamp to reasonable ranges
+            magnitude = torch.clamp(magnitude, 0, 100.0)
+            phase = torch.clamp(phase, -np.pi, np.pi)
+            
+            # Replace NaN/Inf
+            magnitude = torch.where(
+                torch.isnan(magnitude) | torch.isinf(magnitude),
+                torch.zeros_like(magnitude),
+                magnitude
+            )
+            phase = torch.where(
+                torch.isnan(phase) | torch.isinf(phase),
+                torch.zeros_like(phase),
+                phase
+            )
             
             cycle_features.append(magnitude)
             cycle_features.append(phase)
@@ -605,10 +693,24 @@ class InsuranceCycleDetector(nn.Module):
         cycle_features = torch.stack(cycle_features, dim=-1)  # [batch, len(cycles)*2]
         
         # Apply learnable weights (repeat for magnitude and phase)
-        weights = torch.repeat_interleave(self.cycle_weights, 2)
+        weights = torch.repeat_interleave(F.softmax(self.cycle_weights, dim=0), 2)
         weighted_features = cycle_features * weights.unsqueeze(0)
+        
+        # Replace any remaining NaN/Inf
+        weighted_features = torch.where(
+            torch.isnan(weighted_features) | torch.isinf(weighted_features),
+            torch.zeros_like(weighted_features),
+            weighted_features
+        )
         
         # Project to model dimension
         projected_features = self.cycle_projection(weighted_features)
+        
+        # Final safety check
+        projected_features = torch.where(
+            torch.isnan(projected_features) | torch.isinf(projected_features),
+            torch.zeros_like(projected_features),
+            projected_features
+        )
         
         return projected_features

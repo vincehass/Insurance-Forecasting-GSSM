@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Optional, Tuple, Dict, Any, List
 import numpy as np
-from .state_space_layer import StateSpaceLayer
+from .simple_ssm_layer import SimpleStateSpaceLayer as StateSpaceLayer
 from .flow_selectivity import FlowSelectivityLayer
 
 
