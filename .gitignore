@@ -70,6 +70,34 @@ figures/
 *.pdf
 *.svg
 
+# AI-generated content
+results/
+visualizations/
+paper/figures/
+paper/*.pdf
+experiments/*/results/
+experiments/*/visualizations/
+*_figures.py
+standalone_figures/
+paper_figures/
+
+# Generated LaTeX artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Keep only source files
+!paper/icml2026_insurance_gssm.tex
+!paper/supplementary_material.tex
+!paper/references.bib
+!paper/icml2026.sty
+
 # OS
 .DS_Store
 .DS_Store?

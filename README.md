@@ -383,9 +383,9 @@ This project inherits the license from the parent GSSM repository.
 
 For questions and collaborations:
 
-- **Project Lead**: Insurance GSSM Research Team
-- **Email**: insurance-gssm@research.ai
-- **GitHub**: [Link to repository]
+- **Author**: Nadhir Hassen
+- **Email**: nadhir.hassen@mila.quebec
+- **Affiliation**: Mila - Quebec AI Institute
 
 ## 🙏 Acknowledgments
 

@@ -1,0 +1,107 @@
+% ICML 2026 Style File (Simplified)
+% Based on standard conference formats
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{icml2026}[2026/02/08 ICML 2026 Submission Template]
+
+% Page layout
+\RequirePackage[letterpaper]{geometry}
+\geometry{
+  top=1in,
+  bottom=1in,
+  left=0.75in,
+  right=0.75in
+}
+
+% Typography
+\RequirePackage{times}
+\RequirePackage{microtype}
+
+% Mathematics
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+
+% Graphics
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+
+% Tables
+\RequirePackage{booktabs}
+\RequirePackage{multirow}
+
+% Algorithms
+\RequirePackage{algorithm}
+\RequirePackage{algorithmic}
+
+% Hyperlinks
+\RequirePackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+% Title formatting
+\newcommand{\icmltitlerunning}[1]{\def\@icmltitlerunning{#1}}
+\newcommand{\icmltitle}[1]{%
+  \title{#1}
+}
+
+% Author formatting
+\newcommand{\icmlsetsymbol}[2]{\expandafter\def\csname icmlsymbol#1\endcsname{#2}}
+\newenvironment{icmlauthorlist}{}{}
+\newcommand{\icmlauthor}[2]{%
+  \author{#1}
+}
+\newcommand{\icmlaffiliation}[2]{}
+\newcommand{\icmlcorrespondingauthor}[2]{}
+\newcommand{\icmlkeywords}[1]{\def\@icmlkeywords{#1}}
+
+% Print affiliations
+\newcommand{\printAffiliationsAndNotice}{%
+  \maketitle
+  \begin{center}
+  \textit{ICML 2026 Submission - Do Not Distribute}
+  \end{center}
+  \vspace{0.2in}
+}
+
+% Section formatting
+\RequirePackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{1em}{}
+
+% Abstract environment
+\renewenvironment{abstract}{%
+  \begin{center}
+  \textbf{Abstract}
+  \end{center}
+  \begin{quote}
+  \small
+}{%
+  \end{quote}
+}
+
+% Theorem styles
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{note}[theorem]{Note}
+
+% Captions
+\RequirePackage{caption}
+\captionsetup{font=small, labelfont=bf}
+
+\endinput

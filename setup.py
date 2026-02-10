@@ -10,8 +10,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="insurance-gssm",
     version="1.0.0",
-    author="GSSM Research Team",
-    author_email="insurance-gssm@research.ai",
+    author="Nadhir Hassen",
+    author_email="nadhir.hassen@mila.quebec",
     description="GSSM for Insurance Policy Pricing and Claims Forecasting",
     long_description=long_description,
     long_description_content_type="text/markdown",
