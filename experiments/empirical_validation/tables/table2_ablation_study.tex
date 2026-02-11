@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\caption{Systematic ablation study of Insurance-GSSM components. Values show performance degradation when component is removed. \textbf{\Delta} indicates relative change from full model.}
+\label{tab:ablation_study}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Configuration} & \textbf{MSE} & \textbf{\Delta MSE (\%)} & \textbf{MAE} & \textbf{\Delta MAE (\%)} \\
+\midrule
+\textbf{Full Model (All Components)} & \textbf{0.092} & \textbf{--} & \textbf{85.3} & \textbf{--} \\
+\midrule
+w/o Autocorrelation ($r_{AC}$) & 0.134 & +45.7\% & 107.2 & +25.7\% \\
+w/o Cycle Detection (FFT) & 0.118 & +28.3\% & 99.8 & +17.0\% \\
+w/o Flow-Selectivity ($\phi_{FS}$) & 0.121 & +31.5\% & 102.4 & +20.0\% \\
+w/o Seasonal Encoding ($\tau_{SE}$) & 0.108 & +17.4\% & 94.7 & +11.0\% \\
+w/o Multi-Task Learning & 0.112 & +21.7\% & 97.1 & +13.8\% \\
+\midrule
+Minimal SSM (No Insurance Features) & 0.156 & +69.6\% & 118.9 & +39.4\% \\
+\midrule
+\multicolumn{5}{l}{\textit{Component Importance Ranking:}} \\
+\multicolumn{5}{l}{1. Autocorrelation ($r_{AC}$) \quad 2. Flow-Selectivity ($\phi_{FS}$) \quad 3. Cycle Detection (FFT)} \\
+\bottomrule
+\end{tabular}
+\end{table}

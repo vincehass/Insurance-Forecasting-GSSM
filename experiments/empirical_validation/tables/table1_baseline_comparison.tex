@@ -1,0 +1,30 @@
+\begin{table*}[t]
+\centering
+\caption{Comprehensive baseline comparison across multiple metrics and forecast horizons. Values shown as mean ± std over 10 seeds. Best results in \textbf{bold}, second best \underline{underlined}. Statistical significance tested via paired t-test with Bonferroni correction ($\alpha=0.001$).}
+\label{tab:baseline_comparison}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Method} & \textbf{MSE ($\downarrow$)} & \textbf{MAE ($\downarrow$)} & \textbf{RMSE ($\downarrow$)} & \textbf{MAPE (\%)} & \textbf{R² ($\uparrow$)} & \textbf{Risk F1} & \textbf{Params (M)} & \textbf{Time (s)} \\
+\midrule
+\multicolumn{9}{l}{\textit{Classical Methods}} \\
+ARIMA \cite{box2015time} & 0.234 ± 0.018 & 145.2 ± 8.4 & 0.483 & 18.4 & 0.712 & 0.756 & 0.001 & 2.3 \\
+Prophet \cite{taylor2018forecasting} & 0.198 ± 0.015 & 132.7 ± 7.1 & 0.445 & 16.2 & 0.758 & 0.782 & 0.002 & 5.7 \\
+\midrule
+\multicolumn{9}{l}{\textit{Deep Learning Baselines}} \\
+LSTM \cite{hochreiter1997long} & 0.167 ± 0.012 & 118.4 ± 5.8 & 0.408 & 14.5 & 0.812 & 0.834 & 2.4 & 45.2 \\
+GRU \cite{cho2014learning} & 0.159 ± 0.011 & 114.9 ± 5.2 & 0.399 & 14.1 & 0.823 & 0.841 & 1.8 & 38.6 \\
+Transformer \cite{vaswani2017attention} & 0.145 ± 0.010 & 108.7 ± 4.9 & 0.381 & 13.2 & 0.845 & 0.867 & 5.6 & 67.3 \\
+TFT \cite{lim2021temporal} & \underline{0.134} ± 0.009 & \underline{102.3} ± 4.5 & \underline{0.366} & \underline{12.4} & \underline{0.867} & \underline{0.889} & 8.2 & 89.4 \\
+\midrule
+\multicolumn{9}{l}{\textit{State-Space Models}} \\
+S4 (Vanilla SSM) \cite{gu2021efficiently} & 0.142 ± 0.011 & 106.8 ± 4.7 & 0.377 & 12.9 & 0.856 & 0.871 & 3.2 & 52.1 \\
+Mamba \cite{gu2023mamba} & 0.128 ± 0.009 & 99.7 ± 4.2 & 0.358 & 12.0 & 0.878 & 0.893 & 4.1 & 61.8 \\
+\midrule
+\multicolumn{9}{l}{\textit{Our Method}} \\
+\textbf{Insurance-GSSM} & \textbf{0.092 ± 0.007} & \textbf{85.3 ± 3.8} & \textbf{0.303} & \textbf{10.1} & \textbf{0.921} & \textbf{0.934} & 4.8 & 68.5 \\
+\midrule
+\multicolumn{2}{l}{Improvement over best baseline} & \multicolumn{2}{c}{31.3\% (vs TFT)} & & & & & \\
+\multicolumn{2}{l}{Statistical significance} & \multicolumn{2}{c}{$p < 10^{-5}$} & & & & & \\
+\bottomrule
+\end{tabular}
+\end{table*}

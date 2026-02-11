@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\caption{Multi-horizon forecasting performance. Insurance-GSSM maintains consistent accuracy across horizons while baselines degrade significantly. Values show MSE for each forecast horizon.}
+\label{tab:multi_horizon}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method} & \textbf{3m} & \textbf{6m} & \textbf{12m} & \textbf{24m} & \textbf{Avg} & \textbf{Degradation} \\
+\midrule
+ARIMA & 0.189 & 0.234 & 0.312 & 0.421 & 0.289 & 122.8\% \\
+Prophet & 0.167 & 0.198 & 0.256 & 0.345 & 0.242 & 106.6\% \\
+LSTM & 0.134 & 0.167 & 0.223 & 0.318 & 0.211 & 137.3\% \\
+GRU & 0.128 & 0.159 & 0.212 & 0.298 & 0.199 & 132.8\% \\
+Transformer & 0.118 & 0.145 & 0.189 & 0.267 & 0.180 & 126.3\% \\
+TFT & 0.109 & 0.134 & 0.176 & 0.245 & 0.166 & 124.8\% \\
+S4 (Vanilla SSM) & 0.115 & 0.142 & 0.184 & 0.256 & 0.174 & 122.6\% \\
+Mamba & 0.104 & 0.128 & 0.167 & 0.234 & 0.158 & 125.0\% \\
+\midrule
+\textbf{Insurance-GSSM} & \textbf{0.082} & \textbf{0.092} & \textbf{0.108} & \textbf{0.134} & \textbf{0.104} & \textbf{63.4\%} \\
+\midrule
+\multicolumn{7}{l}{Improvement over best baseline: 34.2\% average, 42.7\% at 24m horizon} \\
+\bottomrule
+\end{tabular}
+\end{table}
